@@ -24,18 +24,19 @@ To import paired-end data that is already demultiplexed, we will use the PairedE
 
  #### Prepare a Manifest File
 
-The manifest file is a tab-separated values (TSV) file that lists:
+The manifest file is a tab-separated values (TSV) file that lists in three columns:
 
 * Sample IDs
-* File paths for both forward and reverse sequences
+* Absolute file paths for forward sequences
+* Absolute file paths for forward reverse 
 
-It would look 
+It would look like this:
+
+| sample-id    | file-path-forward | file-reverse |
+| -------- | ------- | -------- |
+| sample_1  | path/file/    | path/file/
+| sample_2 | path/file/     | path/file/
+| sample_3    | path/file/   | path/file/
 
 First, we import raw sequencing data into QIIME2 to create a .qza (QIIME artifact) file. QIIME works with .qza (data files) and .qzv (visualization files). .qza files can be easily converted into .qzv files for visualization.
 
-If we take a look at the data, the samples are already demultiplexed. This means that each sample is separated in a different file, not all sequences are grouped together in the same file with different barcodes that identify the sample from where the sequences come.
-Also, the samples are paired-end, since we have a forward and a reverse sample.
-Therefore are going to use the  PairedEndSequencesWithQuality importing format. 
-For this format, we need to prepare a manifest file that states the location/paths of all of our samples, because the import tool requires the input paths.
-
-    1. Prepare a manifest file: Create a manifest.tsv that lists all your sample IDs, file paths, and read directions:
