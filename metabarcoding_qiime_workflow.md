@@ -78,7 +78,7 @@ To view the .qzv file, there are two options:
 qiime tools view demux-summary.qzv
 ```
 
-Based on the quality score plots from the .qzv file, we need to make the following decisions:
+Based on the quality score plots from the .qzv file, which can be complemented with FASTQC quality reports, we need to make the following decisions:
 
 * Trimming Low-Quality Bases at the Start:
 Decide whether to trim low-quality bases at the start of the reads and the number of bases to trim using the --p-trim-left parameter.
@@ -97,7 +97,7 @@ Denoising is a process used in bioinformatics workflows to clean raw sequencing 
 
 In the context of QIIME 2, DADA2 is the primary algorithm used for denoising (along with Deblur). DADA2 is designed to correct sequencing errors, remove low-quality data, and produce highly accurate ASVs with single-nucleotide resolution.
 
-\_Key Steps in Denoising with DADA2\_ 
+#### Key Steps in Denoising with DADA2 
 
 * Quality Filtering and Trimming
 Low-quality sequences are filtered out based on quality score thresholds.
@@ -116,8 +116,6 @@ Chimeric sequences, which are artifacts resulting from the PCR process, are dete
 * Merging Paired-End Reads
 Forward and reverse reads are merged to reconstruct the full amplicon sequence.
 
-* Output Generation
-DADA2 produces a feature table, representative sequences, and denoising statistics as its outputs.
 
 ```bash
 qiime dada2 denoise-paired \
@@ -132,6 +130,12 @@ qiime dada2 denoise-paired \
 ```
 
 If single-end reads are chosen due to quality, use qiime dada2 denoise-single instead.
+
+* Outputs of DADA2
+
+    + Feature Table (table.qza): A matrix where rows represent ASVs, columns represent samples, and values indicate the frequency of each ASV in each sample.
+    + Representative Sequences (rep-seqs.qza): A list of the unique ASVs inferred by DADA2. This representative sequences files can be used for taxonomic classification and phylogenetic analyses.
+    + Denoising Statistics (denoising-stats.qza): A file that summarizes key statistics for each sample (nthe input reads, the number and percentage of reads that have been filtered and merged chimeric reads detected and removed, and the number of reads retained in the end)
 
 
 ## Step 4: Rarefaction (Optional)
