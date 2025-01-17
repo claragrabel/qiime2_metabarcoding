@@ -60,9 +60,6 @@ qiime tools import \
 
 Since poor-quality reads can introduce errors in downstream analyses, it is necessary to evaluate the quality of the sequencing reads and decide where to trim or truncate low-quality regions.
 
-    • Trimming: Removing low-quality bases at the beginning of the read.
-    • Truncating: Cutting off reads at a certain length when quality drops significantly.
-
 ### Quality Check
 
 ```bash
@@ -70,9 +67,10 @@ qiime demux summarize \
   --i-data demux-paired-end.qza \
   --o-visualization demux-summary.qzv
 ```
-To view the .qzv file, you have two options:
 
-* Upload it to QIIME 2 View: drag and drop the file into the QIIME 2 View website at https://view.qiime2.org/.
+To view the .qzv file, there are two options:
+
+* Upload it to QIIME 2 View: Drag and drop the file into the QIIME 2 View website at https://view.qiime2.org/.
 
 * View locally: If the server supports displaying visualizations, execute the following command. This will automatically open the file in the default web browser:
 
@@ -83,7 +81,7 @@ qiime tools view demux-summary.qzv
 Based on the quality score plots from the .qzv file, we need to make the following decisions:
 
 * Trimming Low-Quality Bases at the Start:
-Decide whether to trim low-quality bases at the start of the reads and the number of bases to trim using the --p-trim-left parameter .
+Decide whether to trim low-quality bases at the start of the reads and the number of bases to trim using the --p-trim-left parameter.
 
 * Truncating Reads:
 Determine where to truncate reads using the --p-trunc-len parameter and how much to truncate.
@@ -94,6 +92,32 @@ If the quality of one read direction (forward or reverse) is significantly lower
 While paired-end reads provide more information, using single-end reads may improve overall data quality if merging is problematic.
 
 ### Denoising
+
+Denoising is a process used in bioinformatics workflows to clean raw sequencing data, removing errors and noise introduced during the sequencing process. The goal is to reconstruct the true biological sequences (Amplicon Sequence Variants, or ASVs) by distinguishing real biological variation from sequencing artifacts.
+
+In the context of QIIME 2, DADA2 is the primary algorithm used for denoising (along with Deblur). DADA2 is designed to correct sequencing errors, remove low-quality data, and produce highly accurate ASVs with single-nucleotide resolution.
+
+\_Key Steps in Denoising with DADA2\_ 
+
+* Quality Filtering and Trimming
+Low-quality sequences are filtered out based on quality score thresholds.
+Reads are trimmed at the start (--p-trim-left) to remove adapter sequences or low-quality bases and truncated at the end.
+
+* Error Modeling
+DADA2 builds an error model for the dataset by analyzing the distribution of errors in the data.
+The model predicts the probability of observing each base at a given position, allowing it to differentiate between true sequences and sequencing errors.
+
+* Dereplication
+Identical sequences within a sample are grouped together (dereplicated) to improve computational efficiency. Unique sequences are retained, but their frequencies are recorded too.
+
+* Elimination of chimeric sequences
+Chimeric sequences, which are artifacts resulting from the PCR process, are detected and removed.
+
+* Merging Paired-End Reads
+Forward and reverse reads are merged to reconstruct the full amplicon sequence.
+
+* Output Generation
+DADA2 produces a feature table, representative sequences, and denoising statistics as its outputs.
 
 ```bash
 qiime dada2 denoise-paired \
