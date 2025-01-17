@@ -32,7 +32,7 @@ The manifest file is a tab-separated values (TSV) file that lists in three colum
 
 It would look like this:
 
-| sample-id    | file-path-forward | file-reverse |
+| sample-id    | file-path-forward | file-path-reverse |
 | -------- | ------- | -------- |
 | sample_1  | path/file/    | path/file/
 | sample_2 | path/file/     | path/file/
@@ -49,11 +49,11 @@ scp -r /home/ecosystems/Desktop/clara/marco/data/ u80064476@urania01:/home/bio/u
 The command to import the data would be:
 
 ```bash
-       qiime tools import \
-         --type 'SampleData[PairedEndSequencesWithQuality]' \
-         --input-path manifest.tsv \
-         --input-format PairedEndFastqManifestPhred33V2 \
-         --output-path demux-paired-end.qza
+qiime tools import \
+--type 'SampleData[PairedEndSequencesWithQuality]' \
+--input-path manifest.tsv \
+--input-format PairedEndFastqManifestPhred33V2 \
+--output-path demux-paired-end.qza
 ```
 
 ## Step 2: Quality Check and Denoising
@@ -95,6 +95,7 @@ While paired-end reads provide more information, using single-end reads may impr
 
 ### Denoising
 
+```bash
 qiime dada2 denoise-paired \
   --i-demultiplexed-seqs demux-paired-end.qza \
   --p-trim-left-f <trim-left-forward> \
@@ -104,6 +105,7 @@ qiime dada2 denoise-paired \
   --o-table table.qza \
   --o-representative-sequences rep-seqs.qza \
   --o-denoising-stats denoising-stats.qza
+```
 
 If single-end reads are chosen due to quality, use qiime dada2 denoise-single instead.
 
