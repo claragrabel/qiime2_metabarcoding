@@ -38,12 +38,12 @@ It would look like this:
 | sample_2 | path/file/     | path/file/
 | sample_3    | path/file/   | path/file/
 
-It is necessary to import raw sequencing data into QIIME2 to create a .qza (QIIME artifact) file. QIIME works with .qza (data files) and .qzv (visualization files). .qza files can be easily converted into .qzv files for visualization.
+It is necessary to import raw sequencing data into QIIME2 to create a .qza (QIIME artifact) file. 
 
 * Load the data into the server
 
 ```bash
-scp -r /home/ecosystems/Desktop/clara/marco/data/ u80064476@urania01:/home/bio/u80064476/ScpFiles/marco_data/
+scp -r /home/ecosystems/Desktop/clara/marco/data/ user@server:/home/bio/u80064476/ScpFiles/marco_data/
 ```
 
 The command to import the data would be:
@@ -58,14 +58,14 @@ qiime tools import \
 
 #### Prepare a metadata file
 
-Metadata in QIIME 2 is a tab-delimited .tsv file that contains information about your samples. It must meet specific formatting requirements for QIIME2.
+The metadata file for QIIME2 must be a tab-delimited .tsv file and meet some requirement:
 
-* Headers: The first row contains column names.
-* The first column must include unique sample identifiers. Only the sample IDs column is mandatory, a file containing only an ID column is a valid QIIME 2 metadata file.
-* Additional Columns: Add group information (e.g., Treatment, Location) for diversity or statistical analyses.
+* Mandatory:
+  + Headers: The first row must contain column names.
+  + Sample IDs: The first column must include unique sample identifiers. This column is the only mandatory one; a file containing only sample IDs would be a valid QIIME 2 metadata file.
+* Additional Columns: Additional columns can be included to provide group information (e.g., Treatment, Location, Timepoint).
 
 Example Metadata File:
-
 sample-id  treatment  location
 sample1    control    siteA
 sample2    treatment  siteB
@@ -79,22 +79,12 @@ https://use.qiime2.org/en/latest/references/metadata.html
 
 #### Validate the metadata file
 
+There is an option in QIIME2 to validate and check if the metadata file is compatible.
+
 ```bash
 qiime metadata tabulate \
   --m-input-file sample-metadata.tsv \
   --o-visualization metadata-summary.qzv
-```
-
-## Step 2: Quality Check and Denoising
-
-Since poor-quality reads can introduce errors in downstream analyses, it is necessary to evaluate the quality of the sequencing reads and decide where to trim or truncate low-quality regions.
-
-### Quality Check
-
-```bash
-qiime demux summarize \
-  --i-data demux-paired-end.qza \
-  --o-visualization demux-summary.qzv
 ```
 
 To view the .qzv file, there are two options:
@@ -105,6 +95,19 @@ To view the .qzv file, there are two options:
 
 ```bash
 qiime tools view demux-summary.qzv
+```
+
+
+## Step 2: Quality Check and Denoising
+
+Since poor-quality reads can introduce errors in downstream analyses, it is necessary to assess the quality of the sequencing reads and decide where to trim or truncate low-quality regions.
+
+### Quality Check
+
+```bash
+qiime demux summarize \
+  --i-data demux-paired-end.qza \
+  --o-visualization demux-summary.qzv
 ```
 
 Based on the quality score plots from the .qzv file, which can be complemented with FASTQC quality reports, we need to make the following decisions:
@@ -122,15 +125,15 @@ While paired-end reads provide more information, using single-end reads may impr
 
 ### Denoising
 
-Denoising is a process used in bioinformatics workflows to clean raw sequencing data, removing errors and noise introduced during the sequencing process. The goal is to reconstruct the true biological sequences (Amplicon Sequence Variants, or ASVs) by distinguishing real biological variation from sequencing artifacts.
+Denoising is a process used in bioinformatics workflows to clean raw sequencing data, removing errors and noise introduced during the sequencing process and reconstruct the true biological sequences (Amplicon Sequence Variants, or ASVs) by distinguishing real biological variation from sequencing artifacts.
 
-In the context of QIIME 2, DADA2 is the primary algorithm used for denoising (along with Deblur). DADA2 is designed to correct sequencing errors, remove low-quality data, and produce highly accurate ASVs with single-nucleotide resolution.
+In the context of QIIME2, DADA2 is the primary algorithm used for denoising (along with Deblur). It is designed to correct sequencing errors, remove low-quality data, and produce highly accurate ASVs with single-nucleotide resolution.
 
 #### Key Steps in Denoising with DADA2 
 
 * Quality Filtering and Trimming
 Low-quality sequences are filtered out based on quality score thresholds.
-Reads are trimmed at the start (--p-trim-left) to remove adapter sequences or low-quality bases and truncated at the end.
+Reads are trimmed at the start (--p-trim-left) to remove adapter sequences or low-quality bases, and truncated at the end.
 
 * Error Modeling
 DADA2 builds an error model for the dataset by analyzing the distribution of errors in the data.
@@ -158,13 +161,13 @@ qiime dada2 denoise-paired \
   --o-denoising-stats denoising-stats.qza
 ```
 
-If single-end reads are chosen due to quality, use qiime dada2 denoise-single instead.
+_If single-end reads are chosen due to quality, use qiime dada2 denoise-single instead._
 
 * Outputs of DADA2
 
-    + Feature Table (table.qza): A matrix where rows represent ASVs (exact Amplicon Sequence Variants at single-nucleotide resolution.), columns represent samples, and values indicate the frequency of each ASV in each sample.
-    + Representative Sequences (rep-seqs.qza): A list of the unique ASVs inferred by DADA2. This representative sequences files can be used for taxonomic classification and phylogenetic analyses.
-    + Denoising Statistics (denoising-stats.qza): A file that summarizes key statistics for each sample (nthe input reads, the number and percentage of reads that have been filtered and merged chimeric reads detected and removed, and the number of reads retained in the end)
+    + Feature table (table.qza): Rows represent ASVs (exact Amplicon Sequence Variants at single-nucleotide resolution.), columns represent samples, and values indicate the frequency of each ASV in each sample.
+    + Representative sequences (rep-seqs.qza): A list of the unique ASVs inferred by DADA2. Used for taxonomic classification and phylogenetic analyses.
+    + Denoising statistics (denoising-stats.qza): A file that summarizes key statistics for each sample (nthe input reads, the number and percentage of reads that have been filtered and merged chimeric reads detected and removed, and the number of reads retained in the end)
 
 
 ## Step 3: Clustering into OTUs
@@ -179,6 +182,12 @@ qiime vsearch cluster-features-de-novo  \
   --o-clustered-sequences otu-rep-seqs.qza 
   --i-table table.qza
 ```
+
+* Outputs
+
+  + Feature table (otu-table.qza): Rows represent OTUs (clustered groups of sequences), columns represent samples nd values indicate the abundance of each OTU in each sample. This table is used for downstream diversity analyses, such as alpha and beta diversity.
+  + Representative sequences (otu-rep-seqs.qza): A file containing representative sequences for each OTU. These sequences represent the centroid of each cluster (the most representative sequence for that OTU). Used for taxonomic classification and phylogenetic analyses.
+  + table.qza (Optional Input): If provided, this input ensures that the feature table that contained the ASVs resulting from the denoising process is updated to reflect the clustered OTUs.
 
 
 ## Step 4: Taxonomy Assignment
