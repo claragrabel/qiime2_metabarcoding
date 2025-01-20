@@ -56,6 +56,35 @@ qiime tools import \
 --output-path demux-paired-end.qza
 ```
 
+#### Prepare a metadata file
+
+Metadata in QIIME 2 is a tab-delimited .tsv file that contains information about your samples. It must meet specific formatting requirements for QIIME2.
+
+* Headers: The first row contains column names.
+* The first column must include unique sample identifiers. Only the sample IDs column is mandatory, a file containing only an ID column is a valid QIIME 2 metadata file.
+* Additional Columns: Add group information (e.g., Treatment, Location) for diversity or statistical analyses.
+
+Example Metadata File:
+
+sample-id  treatment  location
+sample1    control    siteA
+sample2    treatment  siteB
+sample3    control    siteB
+sample4    treatment  siteA
+
+See the guides for reference: 
+https://docs.qiime2.org/2024.10/tutorials/metadata/
+https://use.qiime2.org/en/latest/references/metadata.html
+
+
+#### Validate the metadata file
+
+```bash
+qiime metadata tabulate \
+  --m-input-file sample-metadata.tsv \
+  --o-visualization metadata-summary.qzv
+```
+
 ## Step 2: Quality Check and Denoising
 
 Since poor-quality reads can introduce errors in downstream analyses, it is necessary to evaluate the quality of the sequencing reads and decide where to trim or truncate low-quality regions.
@@ -133,12 +162,51 @@ If single-end reads are chosen due to quality, use qiime dada2 denoise-single in
 
 * Outputs of DADA2
 
-    + Feature Table (table.qza): A matrix where rows represent ASVs, columns represent samples, and values indicate the frequency of each ASV in each sample.
+    + Feature Table (table.qza): A matrix where rows represent ASVs (exact Amplicon Sequence Variants at single-nucleotide resolution.), columns represent samples, and values indicate the frequency of each ASV in each sample.
     + Representative Sequences (rep-seqs.qza): A list of the unique ASVs inferred by DADA2. This representative sequences files can be used for taxonomic classification and phylogenetic analyses.
     + Denoising Statistics (denoising-stats.qza): A file that summarizes key statistics for each sample (nthe input reads, the number and percentage of reads that have been filtered and merged chimeric reads detected and removed, and the number of reads retained in the end)
 
 
-## Step 4: Rarefaction (Optional)
+## Step 3: Clustering into OTUs
+
+Since we aim to explore overall diversity and we do not need single-nucleotide resolution, we will cluster unique sequences into 97% OTUs.
+
+```bash
+qiime vsearch cluster-features-de-novo  \
+  --i-sequences rep-seqs.qza  \
+  --p-perc-identity 0.97  \
+  --o-clustered-table otu-table.qza  \
+  --o-clustered-sequences otu-rep-seqs.qza 
+  --i-table table.qza
+```
+
+
+## Step 4: Taxonomy Assignment
+
+This step assigns taxonomy to OTUs using a reference database (e.g., SILVA, Greengenes, or UNITE for fungal ITS). Since our primers are .../... (not 503F/806R), we use a classifier trained on the full-length 16S rRNA gene sequence to ensure compatibility.
+
+Machine-learning classifiers (e.g., classify-sklearn) are now the trend for taxonomy assignment because they offer higher resolution, probabilistic predictions (assign taxonomy even for sequences with partial matches), and confidence scores that evaluate the reliability of each assignment.
+Pre-trained classifiers, such as SILVA 138 or Greengenes 13_8, are readily available for download in the QIIME 2 Data Resources.
+
+In contrast, VSEARCH assigns taxonomy by aligning sequences to a reference database based on similarity thresholds (e.g., 97%). It assigns taxonomy to the top-scoring match or a consensus of multiple matches if specified. However, this approach lacks the fine resolution and confidence scoring provided by machine-learning classifiers, which evaluate sequence composition probabilistically.
+
+```bash
+qiime feature-classifier classify-sklearn \
+  --i-classifier silva-138-99-nb-classifier.qza \
+  --i-reads otu-rep-seqs.qza \
+  --o-classification taxonomy.qza
+```
+
+Visualization of the Taxonomic classifications for OTUs:
+
+```bash
+qiime metadata tabulate \
+  --m-input-file taxonomy.qza \
+  --o-visualization taxonomy.qzv
+```
+
+
+## Step 5: Rarefaction (Optional)
 
 Rarefaction involves subsampling sequences to a fixed depth across all samples. This process normalizes the number of sequences in each sample to account for differences in sequencing depth, mitigating bias introduced by uneven sequencing efforts.
 
@@ -166,13 +234,6 @@ We have to look at the minimum and maximum sequencing depth (56,514-111,936).
 For example, it is possible to use the 25th or 50th percentile of sequencing depths as a guideline,ensuring the depth is sufficient to retain at least 75% of samples.
 In our case, since we have few samples, we will choose the lowest depth (56,514) to retain all samples.
 
-```bash
-qiime feature-table rarefy \
-  --i-table otu-table.qza \
-  --p-sampling-depth 56514 \
-  --o-rarefied-table rarefied-otu-table.qza
-```
-
 * Determining Sufficiency: Is Rarefaction at 56,514 Enough?
 
 To know if the sequences threshold that we have chosen is enough to retain diversity information or if we are losing too much information, we can examine the rarefaction curves. Rarefaction curves illustrate how diversity metrics stabilize as sequencing depth increases.
@@ -189,3 +250,142 @@ qiime diversity alpha-rarefaction \
 + If the curves plateau below the number of sequences that we have chosen as the threshold, this depth is sufficient to retain diversity information.
 + If not, rarefying at this depth may result in loss of biological diversity information.
 
+```bash
+qiime feature-table rarefy \
+  --i-table otu-table.qza \
+  --p-sampling-depth 56514 \
+  --o-rarefied-table rarefied-otu-table.qza
+```
+
+5. Rarefaction
+Rarefaction subsamples sequences to a fixed depth across all samples to normalize sequencing effort.
+
+Options for Rarefaction Depth:
+Use Rarefaction Curves:
+
+Generate rarefaction curves to determine the point where alpha diversity metrics stabilize.
+Command:
+bash
+Copy
+Edit
+qiime diversity alpha-rarefaction \
+  --i-table otu-table.qza \
+  --i-phylogeny rooted-tree.qza \
+  --p-max-depth 56514 \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization alpha-rarefaction.qzv
+Choose Depth:
+
+Select the lowest sequencing depth to retain most samples.
+For your dataset, use 56,514 if you want to retain all samples.
+Command to Rarefy:
+bash
+Copy
+Edit
+qiime feature-table rarefy \
+  --i-table otu-table.qza \
+  --p-sampling-depth 56514 \
+  --o-rarefied-table rarefied-otu-table.qza
+
+
+## Step 6: Diversity Metrics
+
+### Alpha Diversity
+
+Calculate metrics like richness (Observed OTUs) and evenness (Shannon, Simpson) using the rarefied table.
+
+```bash
+qiime diversity alpha \
+  --i-table rarefied-otu-table.qza \
+  --p-metric observed_features \
+  --o-alpha-diversity observed-otus.qza
+```
+
+Visualize: 
+```bash
+qiime metadata tabulate \
+  --m-input-file observed-otus.qza \
+  --o-visualization observed-otus.qzv
+```
+
+```bash
+qiime diversity alpha \
+  --i-table rarefied-otu-table.qza \
+  --p-metric shannon \
+  --o-alpha-diversity shannon.qza
+```
+
+Visualize:
+```bash
+qiime metadata tabulate \
+  --m-input-file shannon.qza \
+  --o-visualization shannon.qzv
+```
+
+### Beta Diversity
+
+Calculate and visualize differences in community composition between samples.
+
+
+#### Bray-Curtis
+
+The Bray-Curtis dissimilarity metric considers both presence/absence and abundance of features (e.g., OTUs or ASVs) and calculates pairwise distances between samples based on their community composition.
+Output is a distance matrix, where each cell represents the dissimilarity between two samples.
+
+```bash
+qiime diversity beta \
+  --i-table rarefied-otu-table.qza \
+  --p-metric braycurtis \
+  --o-distance-matrix braycurtis-distance.qza
+```
+
+##### Principal Coordinates Analysis (PCoA)
+
+Takes a distance matrix (e.g., from Bray-Curtis) as input and reduces its dimensionality. It represents samples in a lower-dimensional space, usually 2D or 3D, while preserving the pairwise distances as much as possible.
+The reduced-dimensional space highlights patterns or clusters in the data.
+
+Basically, it helps us visualize beta diversity results to explore relationships between samples and identify patterns.
+
+```bash
+qiime diversity pcoa \
+  --i-distance-matrix braycurtis-distance.qza \
+  --o-pcoa braycurtis-pcoa.qza
+```
+
+PCoA Visualization:
+```bash
+qiime emperor plot \
+  --i-pcoa braycurtis-pcoa.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization braycurtis-emperor.qzv
+```
+## Step 7: Statistical Testing
+
+Test for significant differences in diversity metrics across groups.
+
+* Alpha Diversity Group Significance
+
+The following code tests whether alpha diversity metrics (e.g., richness or evenness) differ significantly between groups using the Kruskal-Wallis test. This non-parametric test compares group medians and is well-suited for non-normally distributed data, common in microbial community analyses. The output is a .qzv visualization with boxplots and p-values indicating the statistical significance of group differences.
+
+```bash
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity observed-otus.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --o-visualization observed-otus-group-significance.qzv
+```
+
+* Beta Diversity Group Significance (PERMANOVA):
+
+PERMANOVA (Permutational Multivariate Analysis of Variance) tests whether the variation in a distance matrix is linked to group differences. It compares within-group distances to between-group distances to see if groups are more distinct than expected by chance. The test uses permutations (default: 999) to calculate significance.
+
+Key Parameters:
+--p-method permanova: Specifies the test method (default is PERMANOVA).
+--m-metadata-column <group-column>: Defines the groups to compare (e.g., Treatment or Location).
+```bash
+qiime diversity beta-group-significance \
+  --i-distance-matrix braycurtis-distance.qza \
+  --m-metadata-file sample-metadata.tsv \
+  --m-metadata-column <group-column> \
+  --p-method permanova \
+  --o-visualization braycurtis-group-significance.qzv
+```
