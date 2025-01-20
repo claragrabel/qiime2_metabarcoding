@@ -349,7 +349,7 @@ qiime emperor plot \
   --i-pcoa braycurtis-pcoa.qza \
   --m-metadata-file sample-metadata.tsv \
   --o-visualization braycurtis-emperor.qzv
-  
+
 ```
 ## Step 7: Statistical Testing
 
@@ -370,9 +370,6 @@ qiime diversity alpha-group-significance \
 
 PERMANOVA (Permutational Multivariate Analysis of Variance) tests whether the variation in a distance matrix is linked to group differences. It compares within-group distances to between-group distances to see if groups are more distinct than expected by chance. The test uses permutations (default: 999) to calculate significance.
 
-Key Parameters:
---p-method permanova: Specifies the test method (default is PERMANOVA).
---m-metadata-column <group-column>: Defines the groups to compare (e.g., Treatment or Location).
 ```bash
 qiime diversity beta-group-significance \
   --i-distance-matrix braycurtis-distance.qza \
