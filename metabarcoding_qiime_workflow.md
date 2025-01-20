@@ -217,33 +217,31 @@ qiime metadata tabulate \
 
 ## Step 5: Rarefaction (Optional)
 
-Rarefaction involves subsampling sequences to a fixed depth across all samples. This process normalizes the number of sequences in each sample to account for differences in sequencing depth, mitigating bias introduced by uneven sequencing efforts.
-
-Some samples may appear to have a higher abundance of bacteria simply due to deeper sequencing, which can lead to misleading results. Rarefaction ensures that diversity comparisons between samples are fair by standardizing sequencing depth.
+Rarefaction involves subsampling sequences to a fixed depth across all samples. Some samples may appear to have a higher abundance of bacteria simply due to deeper sequencing, which can lead to misleading results. This process normalizes the number of sequences in each sample to account for differences in sequencing depth, mitigating bias introduced by uneven sequencing efforts.
 
 * Why is rarefaction used for alpha diversity?
-Alpha diversity metrics, particularly richness-based metrics like Observed OTUs or Chao1, are highly sensitive to sequencing depth. Rarefaction is used to address this sensitivity:
+Alpha diversity metrics, particularly richness-based metrics like Observed OTUs or Chao1, are highly sensitive to sequencing depth. Rarefaction is used to address this sensitivity.
 
-+ Richness Bias:
+  + Richness bias:
 Samples with higher sequencing depths tend to detect more rare species, inflating richness values.
 Rarefaction ensures that all samples are evaluated at the same sequencing depth for fair comparisons.
 
-+ Standardization Across Samples:
+  + Standardization across samples:
 Differences in alpha diversity will reflect true biological variation, not sequencing depth differences.
 
-+ Statistical Comparisons:
+  + Statistical comparisons:
 Rarefaction prevents sequencing depth from acting as a confounding variable in group comparisons.
 
-* Why is Rarefaction Performed After OTU Generation?
+* Why is rarefaction performed after OTU generation?
 Rarefaction is applied after OTU generation because OTU clustering relies on the complete dataset to accurately detect and classify species. Performing rarefaction before OTU generation would artificially reduce sequencing depth, leading to loss of rare OTUs and reduced accuracy in clustering.
 Therefore, rarefaction is applied after generating a feature table (abundance table), which represents the number of sequences (features/OTUs) per sample.
 
-* How to Decide the Rarefaction Depth
+* How to decide the rarefaction depth
 We have to look at the minimum and maximum sequencing depth (56,514-111,936).
 For example, it is possible to use the 25th or 50th percentile of sequencing depths as a guideline,ensuring the depth is sufficient to retain at least 75% of samples.
 In our case, since we have few samples, we will choose the lowest depth (56,514) to retain all samples.
 
-* Determining Sufficiency: Is Rarefaction at 56,514 Enough?
+* Determining sufficiency: Is rarefaction at this depth enough?
 
 To know if the sequences threshold that we have chosen is enough to retain diversity information or if we are losing too much information, we can examine the rarefaction curves. Rarefaction curves illustrate how diversity metrics stabilize as sequencing depth increases.
 
@@ -266,43 +264,23 @@ qiime feature-table rarefy \
   --o-rarefied-table rarefied-otu-table.qza
 ```
 
-5. Rarefaction
-Rarefaction subsamples sequences to a fixed depth across all samples to normalize sequencing effort.
-
-Options for Rarefaction Depth:
-Use Rarefaction Curves:
-
-Generate rarefaction curves to determine the point where alpha diversity metrics stabilize.
-Command:
-bash
-Copy
-Edit
-qiime diversity alpha-rarefaction \
-  --i-table otu-table.qza \
-  --i-phylogeny rooted-tree.qza \
-  --p-max-depth 56514 \
-  --m-metadata-file sample-metadata.tsv \
-  --o-visualization alpha-rarefaction.qzv
-Choose Depth:
-
-Select the lowest sequencing depth to retain most samples.
-For your dataset, use 56,514 if you want to retain all samples.
-Command to Rarefy:
-bash
-Copy
-Edit
-qiime feature-table rarefy \
-  --i-table otu-table.qza \
-  --p-sampling-depth 56514 \
-  --o-rarefied-table rarefied-otu-table.qza
-
 
 ## Step 6: Diversity Metrics
 
 ### Alpha Diversity
 
-Calculate metrics like richness (Observed OTUs) and evenness (Shannon, Simpson) using the rarefied table.
+Calculate metrics like richness (Observed OTUs) and evenness (Shannon, Simpson) in each sample using the rarefied table.
 
+#### Concepts
+* Richness: The total number of species (or units, such as OTUs or ASVs) in a sample.
+* Evenness: How evenly individuals are distributed among the species. If one species dominates, evenness will be low.
+
+#### Indexes
+  + Shannon Index: Combines richness and evenness.
+  + Simpson Index: Focuses on evenness.
+  + Observed OTUs: Counts the number of unique OTUs.
+
+Observed OUTs:
 ```bash
 qiime diversity alpha \
   --i-table rarefied-otu-table.qza \
@@ -317,6 +295,7 @@ qiime metadata tabulate \
   --o-visualization observed-otus.qzv
 ```
 
+Shannon index:
 ```bash
 qiime diversity alpha \
   --i-table rarefied-otu-table.qza \
@@ -334,7 +313,10 @@ qiime metadata tabulate \
 ### Beta Diversity
 
 Calculate and visualize differences in community composition between samples.
-
+Beta diversity calculates differences in species composition and abundance between communities. It responds to questions such as: How similar are the comunities of the different samples? Are there patterns that group comunities according to certain factors? 
+#### Concepts
+* Bray-Curtis: Considers differences in abundance.
+* Jaccard: Considers only presence/absence.
 
 #### Bray-Curtis
 
@@ -367,6 +349,7 @@ qiime emperor plot \
   --i-pcoa braycurtis-pcoa.qza \
   --m-metadata-file sample-metadata.tsv \
   --o-visualization braycurtis-emperor.qzv
+  
 ```
 ## Step 7: Statistical Testing
 
