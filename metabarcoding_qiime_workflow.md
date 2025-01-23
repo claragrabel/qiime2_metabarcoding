@@ -192,12 +192,14 @@ qiime vsearch cluster-features-de-novo  \
 
 ## Step 4: Taxonomy Assignment
 
-This step assigns taxonomy to OTUs using a reference database (e.g., SILVA, Greengenes, or UNITE for fungal ITS). Since our primers are .../... (not 503F/806R), we use a classifier trained on the full-length 16S rRNA gene sequence to ensure compatibility.
+This step assigns taxonomy to OTUs using a reference database (e.g., SILVA, Greengenes, or UNITE for fungal ITS). 
+Since our primers are .../... (not 503F/806R), we use a classifier trained on the full-length 16S rRNA gene sequence to ensure compatibility.
 
 Machine-learning classifiers (e.g., classify-sklearn) are now the trend for taxonomy assignment because they offer higher resolution, probabilistic predictions (assign taxonomy even for sequences with partial matches), and confidence scores that evaluate the reliability of each assignment.
-Pre-trained classifiers, such as SILVA 138 or Greengenes 13_8, are readily available for download in the QIIME 2 Data Resources.
+Pre-trained classifiers, such as classifiers trained on the SILVA 138 or Greengenes 13_8 databases, are readily available for download in the QIIME2 Data Resources and save time compared to training a custom classifier.
+Specifically, the classify-sklearn method uses the Naive Bayes algorithm to predict taxonomy based on k-mer patterns in input sequences.
 
-In contrast, VSEARCH assigns taxonomy by aligning sequences to a reference database based on similarity thresholds (e.g., 97%). It assigns taxonomy to the top-scoring match or a consensus of multiple matches if specified. However, this approach lacks the fine resolution and confidence scoring provided by machine-learning classifiers, which evaluate sequence composition probabilistically.
+In contrast, VSEARCH assigns taxonomy by aligning sequences to a reference database based on similarity thresholds (e.g., 97%). It assigns taxonomy to the top-scoring match or a consensus of multiple matches if specified. This approach lacks the fine resolution and confidence scoring provided by machine-learning classifiers.
 
 ```bash
 qiime feature-classifier classify-sklearn \
@@ -351,6 +353,7 @@ qiime emperor plot \
   --o-visualization braycurtis-emperor.qzv
 
 ```
+
 ## Step 7: Statistical Testing
 
 Test for significant differences in diversity metrics across groups.
