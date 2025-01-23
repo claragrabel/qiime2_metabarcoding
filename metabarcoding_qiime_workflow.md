@@ -201,6 +201,12 @@ Specifically, the classify-sklearn method uses the Naive Bayes algorithm to pred
 
 In contrast, VSEARCH assigns taxonomy by aligning sequences to a reference database based on similarity thresholds (e.g., 97%). It assigns taxonomy to the top-scoring match or a consensus of multiple matches if specified. This approach lacks the fine resolution and confidence scoring provided by machine-learning classifiers.
 
+Download the classifier. For , we will use  Greengenes2 2022.10 full length sequences / Silva 138 99% OTUs full-length sequences, which are compatible with QIIME 2 2021.4-2024.2 (we are using qiime2-amplicon-2023.9)
+https://resources.qiime2.org/
+
+
+Execute the command:
+
 ```bash
 qiime feature-classifier classify-sklearn \
   --i-classifier silva-138-99-nb-classifier.qza \
