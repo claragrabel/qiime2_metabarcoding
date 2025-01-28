@@ -13,19 +13,25 @@ This repository will guide you through the metabarcoding workflow from raw data 
 
 ### Workflow
 1. Data Import
+
 Prepare and import your sequencing data into QIIME2.
 
 2. Quality Control
+
 Perform quality filtering and trimming using DADA2 for denoising.
 
 3. Clustering
-Clusering sequences similar at 97% into OTUs.
 
-3. Taxonomic Classification
+Clusetring sequences similar at 97% into OTUs.
+
+4. Taxonomic Classification
+
 Assign taxonomy to representative sequences using pre-trained classifiers and databases like SILVA or Greengenes.
 
 5. Diversity Analysis
+
 Explore aplha diversity (Richness, Shannon index) and beta diversity (PCoA plots, PERMANOVA tests)
 
-5. Visualization
+6. Visualization
+
 Generate visualizations, such as taxonomic bar plots and PCoA plots for community composition.
