@@ -201,9 +201,7 @@ Specifically, the classify-sklearn method uses the Naive Bayes algorithm to pred
 
 In contrast, VSEARCH assigns taxonomy by aligning sequences to a reference database based on similarity thresholds (e.g., 97%). It assigns taxonomy to the top-scoring match or a consensus of multiple matches if specified. This approach lacks the fine resolution and confidence scoring provided by machine-learning classifiers.
 
-Download the classifier. For , we will use  Greengenes2 2022.10 full length sequences / Silva 138 99% OTUs full-length sequences, which are compatible with QIIME 2 2021.4-2024.2 (we are using qiime2-amplicon-2023.9)
-https://resources.qiime2.org/
-
+We have to download the classifier from the QIIME2 resources page https://resources.qiime2.org/ and import the .qza file into the server. We will use either Greengenes2 2022.10 full length sequences or Silva 138 99% OTUs full-length sequences, which are compatible with QIIME2 versions from 2021.4 to 2024.2 (we are using qiime2-amplicon-2023.9).
 
 Execute the command:
 
@@ -212,6 +210,15 @@ qiime feature-classifier classify-sklearn \
   --i-classifier gg_2022_10_backbone_full_length.nb.qza \
   --i-reads otu-rep-seqs.qza \
   --o-classification taxonomy.qza
+```
+
+we will actually run the command on the background using nohup (no hang up), so that it keeps on running even if the session is closed:
+
+```bash
+nohup qiime feature-classifier classify-sklearn \
+  --i-classifier gg_2022_10_backbone_full_length.nb.qza \
+  --i-reads otu-rep-seqs.qza \
+  --o-classification taxonomy.qza > classify-sklearn.log 2>&1 &
 ```
 
 Visualization of the Taxonomic classifications for OTUs:
