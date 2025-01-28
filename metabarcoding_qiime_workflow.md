@@ -212,6 +212,15 @@ qiime feature-classifier classify-sklearn \
   --o-classification taxonomy.qza
 ```
 
+we will actually run the command on the background using nohup (no hang up), so that it keeps on running even if the session is closed:
+
+```bash
+nohup qiime feature-classifier classify-sklearn \
+  --i-classifier gg_2022_10_backbone_full_length.nb.qza \
+  --i-reads otu-rep-seqs.qza \
+  --o-classification taxonomy.qza > classify-sklearn.log 2>&1 &
+```
+
 Visualization of the Taxonomic classifications for OTUs:
 
 ```bash
