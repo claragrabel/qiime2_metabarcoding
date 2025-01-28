@@ -209,7 +209,7 @@ Execute the command:
 
 ```bash
 qiime feature-classifier classify-sklearn \
-  --i-classifier silva-138-99-nb-classifier.qza \
+  --i-classifier gg_2022_10_backbone_full_length.nb.qza \
   --i-reads otu-rep-seqs.qza \
   --o-classification taxonomy.qza
 ```
