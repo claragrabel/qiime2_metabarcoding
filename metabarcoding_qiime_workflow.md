@@ -170,6 +170,15 @@ _If single-end reads are chosen due to quality, use qiime dada2 denoise-single i
     + Denoising statistics (denoising-stats.qza): A file that summarizes key statistics for each sample (nthe input reads, the number and percentage of reads that have been filtered and merged chimeric reads detected and removed, and the number of reads retained in the end)
 
 
+Visualize:
+
+```bash
+ qiime feature-table summarize \
+    --i-table table.qza \
+    --o-visualization table.qzv
+```
+
+
 ## Step 3: Clustering into OTUs
 
 Since we aim to explore overall diversity and we do not need single-nucleotide resolution, we will cluster unique sequences into 97% OTUs.
@@ -235,7 +244,7 @@ qiime metadata tabulate \
 Rarefaction involves subsampling sequences to a fixed depth across all samples. Some samples may appear to have a higher abundance of bacteria simply due to deeper sequencing, which can lead to misleading results. This process normalizes the number of sequences in each sample to account for differences in sequencing depth, mitigating bias introduced by uneven sequencing efforts.
 
 * Why is rarefaction used for alpha diversity?
-Alpha diversity metrics, particularly richness-based metrics like Observed OTUs or Chao1, are highly sensitive to sequencing depth. Rarefaction is used to address this sensitivity.
+Alpha diversity metrics, particularly richness-based metrics like Observed OTUs or Chao1, are highly sensitive to sequencing depth. Rarefaction is used to address this sensitivity. Therefore, rarefaction is applied on the OTU feature table.
 
   + Richness bias:
 Samples with higher sequencing depths tend to detect more rare species, inflating richness values.
@@ -252,9 +261,9 @@ Rarefaction is applied after OTU generation because OTU clustering relies on the
 Therefore, rarefaction is applied after generating a feature table (abundance table), which represents the number of sequences (features/OTUs) per sample.
 
 * How to decide the rarefaction depth
-We have to look at the minimum and maximum sequencing depth (56,514-111,936).
-For example, it is possible to use the 25th or 50th percentile of sequencing depths as a guideline,ensuring the depth is sufficient to retain at least 75% of samples.
-In our case, since we have few samples, we will choose the lowest depth (56,514) to retain all samples.
+We have to look at the minimum and maximum sequencing depth (22431-49046).
+For example, it is possible to use the 25th or 50th percentile of sequencing depths as a guideline, ensuring the depth is sufficient to retain at least 75% of samples.
+In our case, since we have few samples, we will choose the lowest depth (22431) to retain all samples.
 
 * Determining sufficiency: Is rarefaction at this depth enough?
 
@@ -264,9 +273,8 @@ Generate Rarefaction Curves:
 ```bash
 qiime diversity alpha-rarefaction \
   --i-table otu-table.qza \
-  --i-phylogeny rooted-tree.qza \
-  --p-max-depth 56514 \
-  --m-metadata-file sample-metadata.tsv \
+  --p-max-depth 22431 \
+  --m-metadata-file metadata.tsv \
   --o-visualization alpha-rarefaction.qzv
 ```
 + If the curves plateau below the number of sequences that we have chosen as the threshold, this depth is sufficient to retain diversity information.
@@ -275,10 +283,16 @@ qiime diversity alpha-rarefaction \
 ```bash
 qiime feature-table rarefy \
   --i-table otu-table.qza \
-  --p-sampling-depth 56514 \
+  --p-sampling-depth 22431 \
   --o-rarefied-table rarefied-otu-table.qza
 ```
+Visualize:
 
+```bash
+ qiime feature-table summarize \
+    --i-table rarefied-otu-table.qza \
+    --o-visualization rarefied-otu-table.qzv
+```
 
 ## Step 6: Diversity Metrics
 
