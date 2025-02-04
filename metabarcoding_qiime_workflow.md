@@ -324,6 +324,8 @@ qiime metadata tabulate \
   --o-visualization observed-otus.qzv
 ```
 
+*_The Shannon Index or Shannon entropy in QIIME2 is calculated using log2 instead of ln. Therefore, instead of values between 1.5-3.5, we can expect values in the range of 6-8._
+
 Shannon index:
 ```bash
 qiime diversity alpha \
