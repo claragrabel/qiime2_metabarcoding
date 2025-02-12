@@ -185,7 +185,7 @@ To see correlation
 
 ```{r}
 # Match Shannon Index to PCoA data
-pcoa_data$Shannon <- alpha_div$Shannon[match(pcoa_data$SampleID, alpha_div$SampleID)]
+pcoa_data$Shannon <- shannon_div[match(pcoa_data$SampleID, shannon_div$SampleID)]
 
 ggplot(pcoa_data, aes(x=Axis.1, y=Axis.2, color=position, size=Shannon)) +
   geom_point(alpha=0.8) +
