@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
 # devtools::install_github("jbisanz/qiime2R")
 
-pacman::p_load(phyloseq, vegan, ggplot2, qiime2R, ggtree, pheatmap)
+pacman::p_load(phyloseq, vegan, ggplot2, qiime2R, ggtree, pheatmap, tidyr, tidyverse, ggpubr)
 
 # phyloseq: For microbiome analysis
 # qiime2R: To import QIIME2 .qza files
@@ -89,6 +89,9 @@ ggplot(observed_otus, aes(x=SampleID, y=Observed, fill=Position)) +
 
 ```
 
+
+
+
 Comparing between tree positions.
 
 ```{r}
@@ -110,7 +113,6 @@ Comparing individual sample diversity.
 
 shannon_div <- estimate_richness(physeq, measures="Shannon")  # estimate_richness() automatically uses the natural logarithm (ln) for Shannon diversity
 shannon_div$SampleID <- rownames(shannon_div)  # Add sample ID for plotting
-
 shannon_div$Position <- sample_data(physeq)$position  # Add metadata
 
 # Plot
