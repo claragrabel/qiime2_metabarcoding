@@ -43,7 +43,7 @@ It is necessary to import raw sequencing data into QIIME2 to create a .qza (QIIM
 * Load the data into the server
 
 ```bash
-scp -r /home/ecosystems/Desktop/clara/marco/data/ user@server:/home/bio/u80064476/ScpFiles/marco_data/
+scp -r /home/path/data/ user@server:/home/ScpFiles/data/
 ```
 
 The command to import the data would be:
